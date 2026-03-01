@@ -48,7 +48,7 @@
                 "responder",
                 "--config-file", "tmp/mqttreplicate.conf",
                 "--install-type", "git",
-                //"--debug", "off",
+                "--debug", "off",
             ],
             "console": "integratedTerminal"
         },
