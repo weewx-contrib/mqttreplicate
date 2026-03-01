@@ -235,7 +235,6 @@ class TestMQTTRequesterLoopThread(unittest.TestCase):
             instance_name: {
                 'dbmanager': mock_db_manager,
                 'type': 'main',
-                'direct_update': False,
             }
         }
 

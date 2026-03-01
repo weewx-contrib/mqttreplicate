@@ -136,6 +136,7 @@ if __name__ == '__main__':
 
         mqtt_requester = mqttreplicate.MQTTRequester(config_dict, engine)
 
+        print("Calling genStartupRecords")
         for record in mqtt_requester.genStartupRecords(None):
             print("REC:   ",
                   weeutil.weeutil.timestamp_to_string(record['dateTime']),
@@ -145,6 +146,7 @@ if __name__ == '__main__':
         print(f"Sleeping {int(sleep_amount)} seconds")
         time.sleep(sleep_amount)
 
+        print("Calling genArchiveRecords")
         for record in mqtt_requester.genArchiveRecords(None):
             print("REC:   ",
                   weeutil.weeutil.timestamp_to_string(record['dateTime']),
