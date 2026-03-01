@@ -937,7 +937,7 @@ class MQTTRequesterLoopThread(threading.Thread):
                 return
 
             record = json.loads(msg.payload.decode('utf-8'))
-            if self.data_bindings[data_binding]['type'] == 'main'
+            if self.data_bindings[data_binding]['type'] == 'main':
                 # For all records from the 'main' db, create an archive_record
                 self.data_queue.put((record['dateTime'], record))
             else:
