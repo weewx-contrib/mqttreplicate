@@ -140,7 +140,8 @@ if __name__ == '__main__':
         for record in mqtt_requester.genStartupRecords(None):
             print("REC:   ",
                   weeutil.weeutil.timestamp_to_string(record['dateTime']),
-                  weeutil.weeutil.to_sorted_string(record))
+                  # weeutil.weeutil.to_sorted_string(record)
+                  )
 
         sleep_amount = calculate_sleep(archive_interval, archive_delay)
         print(f"Sleeping {int(sleep_amount)} seconds")
@@ -150,7 +151,8 @@ if __name__ == '__main__':
         for record in mqtt_requester.genArchiveRecords(None):
             print("REC:   ",
                   weeutil.weeutil.timestamp_to_string(record['dateTime']),
-                  weeutil.weeutil.to_sorted_string(record))
+                  # weeutil.weeutil.to_sorted_string(record)
+                  )
 
         mqtt_requester.closePort()
 
