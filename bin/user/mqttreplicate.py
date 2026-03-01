@@ -588,12 +588,23 @@ class MQTTResponderThread(threading.Thread):
                                                                      self.publish_qos,
                                                                      False,
                                                                      properties=data['properties'])
+                        # ToDo: check return code in the mqtt_message_info
 
                         # Add the message 'mid' to the 'mids collection', self.mids.
                         # This collection will be monitored (in _on_publish) to know when it safe to disconnect.
-                        self.mids[mqtt_message_info.mid] = {}
-                        self.mids[mqtt_message_info.mid]['time_stamp'] = time.time()
-                        self.mids[mqtt_message_info.mid]['qos'] = self.publish_qos
+                        # Sometimes on_publish is called before the call returns
+                        # In that case, the 'inflight' mid was added in the on_publish callback.
+                        # So, we remove it here.
+                        if mqtt_message_info.mid in self.mids:
+                            del self.mids[mqtt_message_info.mid]
+                        else:
+                            self.mids[mqtt_message_info.mid] = {}
+                            self.mids[mqtt_message_info.mid]['time_stamp'] = time.time()
+                            self.mids[mqtt_message_info.mid]['qos'] = self.publish_qos
+                        # ToDo: Make configurable
+                        if record_count % 1000 == 0:
+                            self.logger.loginf(f"{record_count} 'catchup' records {weeutil.weeutil.timestamp_to_string(record['dateTime'])} "
+                                               "have been published.")
 
                     self.logger.loginf(f'Responding/publishing topic {data["topic"]} '
                                        f'data_binding {data["data_binding"]} '
@@ -626,6 +637,11 @@ class MQTTResponderThread(threading.Thread):
             # time_stamp = self.mids[mid]['time_stamp']
             # qos = self.mids[mid]['qos']
             del self.mids[mid]
+        # Sometimes on_publish is called before publish call returns.
+        # So we will add the 'inflight' mid here instead.
+        # I think this happens when qos=0
+        else:
+            self.mids[mid] = {}
         # Each response that is published adds its 'mid' to the 'mid collection', self.mids.
         # If all messages have been 'published', we can safely disconnect from the broker.
         if len(self.mids) > 0:
@@ -788,9 +804,10 @@ class MQTTRequester(weewx.drivers.AbstractDevice):
                 yield record
             except queue.Empty:
                 tries += 1
+                self.logger.logdbg(f"After {tries} wait of {wait_before_retry}, "
+                                   f"record count: {record_count}"
+                                   )
                 if tries >= max_tries:
-                    self.logger.logdbg(f"After {tries} wait of {wait_before_retry}, "
-                                       "archive record queue is empty.")
                     break
 
     def genLoopPackets(self):
@@ -899,7 +916,8 @@ class MQTTRequesterLoopThread(threading.Thread):
     def _on_disconnect(self, _userdata, rc):
         if rc == 0:
             for data_binding_name, data_binding in self.data_bindings.items():
-                data_binding['dbmanager'].close()
+                # ToDo: Need to investigate - seems to run in a different thread when running standalone
+                # data_binding['dbmanager'].close()
                 self.logger.logdbg(f"On disconnect, closed db {data_binding_name}.")
 
     def _on_log(self, _client, _userdata, level, msg):
