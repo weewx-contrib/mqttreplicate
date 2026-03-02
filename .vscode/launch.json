@@ -40,6 +40,7 @@
             "console": "integratedTerminal"
         },
         {
+            "justMyCode": false ,
             "name": "responder",
             "type": "debugpy",
             "request": "launch",
