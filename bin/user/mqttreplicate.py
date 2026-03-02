@@ -588,6 +588,11 @@ class MQTTResponderThread(threading.Thread):
                                                                      self.publish_qos,
                                                                      False,
                                                                      properties=data['properties'])
+                        if mqtt_message_info.rc > 0:
+                            self.logger.logerr(f"Error {int(mqtt_message_info.rc)}, "
+                                               f"{paho.mqtt.client.error_string(mqtt_message_info.rc)} "
+                                               f"responding/publishing on topic {data['topic']}, properties {data['properties']}, payload: {payload}.")
+
                         # ToDo: check return code in the mqtt_message_info
 
                         # Add the message 'mid' to the 'mids collection', self.mids.
@@ -605,6 +610,9 @@ class MQTTResponderThread(threading.Thread):
                         if record_count % 1000 == 0:
                             self.logger.loginf(f"{record_count} 'catchup' records {weeutil.weeutil.timestamp_to_string(record['dateTime'])} "
                                                "have been published.")
+                            # ToDo: Temp hack to slow down publishing - hope to make it more robust when publishing large 'catchup'
+                            # At least when qos=0, records seem to drop. Have not tested qos>0
+                            # time.sleep(5)
 
                     self.logger.loginf(f'Responding/publishing topic {data["topic"]} '
                                        f'data_binding {data["data_binding"]} '
