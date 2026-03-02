@@ -76,6 +76,10 @@ class MQTTClient(abc.ABC):
         ''' Connect to the MQTT server. '''
         raise NotImplementedError("Method 'loop_forever' is not implemented")
 
+    def loop(self, blocking_time):
+        ''' Connect to the MQTT server. '''
+        raise NotImplementedError("Method 'loop_forever' is not implemented")
+
     def subscribe(self, topic, qos):
         ''' Subscribe to the MQTT topic. '''
         raise NotImplementedError("Method 'subscribe' is not implemented")
@@ -234,6 +238,9 @@ class MQTTClientV2(MQTTClient):
 
     def loop_forever(self):
         self.client.loop_forever()
+
+    def loop(self, blocking_time):
+        self.client.loop(blocking_time)
 
     def publish(self, topic, data, qos, retain, properties=None):
         return self.client.publish(topic, data, qos, retain, properties)
@@ -591,9 +598,10 @@ class MQTTResponderThread(threading.Thread):
                         if mqtt_message_info.rc > 0:
                             self.logger.logerr(f"Error {int(mqtt_message_info.rc)}, "
                                                f"{paho.mqtt.client.error_string(mqtt_message_info.rc)} "
-                                               f"responding/publishing on topic {data['topic']}, properties {data['properties']}, payload: {payload}.")
+                                               f"responding/publishing on topic {data['topic']}, "
+                                               f"properties {data['properties']}, payload: {payload}.")
 
-                        # ToDo: check return code in the mqtt_message_info
+                        self.mqtt_client.loop(.1)
 
                         # Add the message 'mid' to the 'mids collection', self.mids.
                         # This collection will be monitored (in _on_publish) to know when it safe to disconnect.
@@ -620,8 +628,9 @@ class MQTTResponderThread(threading.Thread):
                                        f'properties {data["properties"]} '
                                        f'with records: {record_count}.')
                     # Wait for all messages to be published
-                    if len(self.mids) > 0:
-                        self.mqtt_client.loop_forever()
+                    while len(self.mids) > 0:
+                        self.mqtt_client.loop(1)
+                    self.mqtt_client.disconnect()
                 else:
                     break
             except Exception as exception:  # (want to catch all ) pylint: disable=broad-exception-caught
@@ -650,15 +659,6 @@ class MQTTResponderThread(threading.Thread):
         # I think this happens when qos=0
         else:
             self.mids[mid] = {}
-        # Each response that is published adds its 'mid' to the 'mid collection', self.mids.
-        # If all messages have been 'published', we can safely disconnect from the broker.
-        if len(self.mids) > 0:
-            # self.logger.logdbg(f"Published at (int(time.time())): {time_stamp} {mid} {qos}")
-            # self.logger.logdbg("Inflight at ({int(time.time())}): mids {self.mids}")
-            pass
-        else:
-            self.logger.logdbg("All catchup data has been published.")
-            self.mqtt_client.disconnect()
 
     def _on_log(self, _client, _userdata, level, msg):
         self.mqtt_logger[level](f"Client {self.client_id} MQTT log: {msg}")
