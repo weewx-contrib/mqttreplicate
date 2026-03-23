@@ -49,9 +49,11 @@ Where `master` is the branch name.
 
 *Note:* WeeWX 'package' installs add the user that performed the install to the `weewx` group.
 This means that this user should not need to use `sudo` to install the `weewx-mqtt/replicate` extension.
-**But** in order to for this update to the `weewx` group to take affect, the user has to have logged out/in at least once or use one of the other methods that can be found on the web
+**But** in order to for this update to the `weewx` group to take affect,
+the user has to have logged out/in at least once or use one of the other methods that can be found on the web
 
-*Note:* WeeWX pip installs that install WeeWX into a `Python virtual environment`, must 'activate' the environment performing the install. A typical invocation would look like this.
+*Note:* WeeWX pip installs that install WeeWX into a `Python virtual environment`, must 'activate' the environment performing the install.
+A typical invocation would look like this.
 
 ```shell
 source ~/weewx-venv/bin/activate
